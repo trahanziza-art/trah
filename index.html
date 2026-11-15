@@ -93,8 +93,8 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
 .product:hover{transform:translateY(-4px);border-color:rgba(255,77,210,.4)}
 .product.out{opacity:0.55;cursor:not-allowed}
 .product.out:hover{transform:none;border-color:var(--bd)}
-.product-img{aspect-ratio:1;border-radius:12px;margin-bottom:12px;background:linear-gradient(135deg,var(--bg2),#1a0b2e);position:relative;overflow:hidden}
-.product-img img{width:100%;height:100%;object-fit:cover}
+.product-img{aspect-ratio:1;border-radius:12px;margin-bottom:12px;background:#fff;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.product-img img{width:100%;height:100%;object-fit:contain;padding:4px}
 .product-img .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:52px;opacity:.3;pointer-events:none}
 .badge{position:absolute;top:8px;left:8px;z-index:2;padding:4px 9px;border-radius:999px;font-size:9px;font-weight:700;background:var(--grad);color:#fff;text-transform:uppercase}
 .badge.out{background:linear-gradient(135deg,#666,#444);top:auto;bottom:8px;left:8px}
@@ -216,8 +216,8 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
 .modal.open{display:flex}
 .modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px)}
 .modal-card{position:relative;background:var(--bg2);border:1px solid var(--bd);border-radius:20px;max-width:480px;width:100%;max-height:90dvh;display:flex;flex-direction:column;overflow:hidden}
-.modal-img{aspect-ratio:16/10;background:var(--card);position:relative;overflow:hidden;flex-shrink:0}
-.modal-img img{width:100%;height:100%;object-fit:cover}
+.modal-img{aspect-ratio:16/10;background:#fff;position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.modal-img img{width:100%;height:100%;object-fit:contain;padding:10px}
 .modal-body{padding:20px;overflow-y:auto;flex:1}
 .modal-body h3{font-size:22px;margin-bottom:6px;color:var(--acc)}
 .mflavors-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);font-weight:700;margin-bottom:8px}
@@ -1420,74 +1420,4 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     if (savedPayMethod === 'cash') {
       msg += `💵 Оплата: Наличными\n`;
       msg += `🤲 Клиент даёт: ${fmt(savedCashAmount)} BYN\n`;
-      msg += `🔄 Сдача: ${fmt(Math.max(0, savedCashAmount - total))} BYN\n`;
-    } else {
-      msg += `💳 Оплата: Картой\n`;
-    }
-    msg += `\n✅ Подтверждаю!`;
-
-    const url = `https://t.me/${MANAGER}?text=${encodeURIComponent(msg)}`;
-    try {
-      if (tg?.openTelegramLink) tg.openTelegramLink(url);
-      else window.location.href = url;
-    } catch(e){ window.location.href = url; }
-  }
-
-  window.openCart = openCart;
-  window.openProfile = openProfile;
-  window.openPromos = openPromos;
-  window.openAdmin = openAdmin;
-  window.switchAdminTab = switchAdminTab;
-  window.closeAll = closeAll;
-  window.changeQty = changeQty;
-  window.rmItem = rmItem;
-  window.addFromModal = addFromModal;
-  window.closeModal = closeModal;
-  window.openConfirmOrder = openConfirmOrder;
-  window.closeConfirmOrder = closeConfirmOrder;
-  window.toggleConfirmBtn = toggleConfirmBtn;
-  window.sendOrderToTG = sendOrderToTG;
-  window.applyPromo = applyPromo;
-  window.removePromo = removePromo;
-  window.confirmOrder = confirmOrder;
-  window.cancelOrder = cancelOrder;
-  window.shareReferral = shareReferral;
-  window.updateStockFromInput = updateStockFromInput;
-  window.onCashInput = onCashInput;
-
-  load();
-  renderProducts();
-  updateCount();
-  updateCartUI();
-  initSupabase(async () => {
-    await loadStock();
-    await initUserAndReferral();
-    
-    if (supabase && user.id){
-      try {
-        const { data: o } = await supabase.from('orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'confirmed')
-          .order('created_at', { ascending: false });
-        if (o) {
-          orders = o.map(x => ({
-            id: x.order_id, date: x.created_at, items: x.items,
-            total: Number(x.total), discount: Number(x.discount), status: x.status
-          }));
-          save();
-          updateCount();
-          updateCartUI();
-        }
-      } catch(e){ console.warn('[orders sync]', e); }
-    }
-    
-    renderProducts();
-  });
-
-  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeAll(); closeModal(); } });
-  console.log('%c🎨 Trahan Zizhka v25','font-size:16px;font-weight:bold;color:#c6ff2e');
-})();
-</script>
-</body>
-</html>
+      msg += `🔄
