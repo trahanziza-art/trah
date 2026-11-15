@@ -1420,4 +1420,74 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     if (savedPayMethod === 'cash') {
       msg += `💵 Оплата: Наличными\n`;
       msg += `🤲 Клиент даёт: ${fmt(savedCashAmount)} BYN\n`;
-      msg += `🔄
+      msg += `🔄 Сдача: ${fmt(Math.max(0, savedCashAmount - total))} BYN\n`;
+    } else {
+      msg += `💳 Оплата: Картой\n`;
+    }
+    msg += `\n✅ Подтверждаю!`;
+
+    const url = `https://t.me/${MANAGER}?text=${encodeURIComponent(msg)}`;
+    try {
+      if (tg?.openTelegramLink) tg.openTelegramLink(url);
+      else window.location.href = url;
+    } catch(e){ window.location.href = url; }
+  }
+
+  window.openCart = openCart;
+  window.openProfile = openProfile;
+  window.openPromos = openPromos;
+  window.openAdmin = openAdmin;
+  window.switchAdminTab = switchAdminTab;
+  window.closeAll = closeAll;
+  window.changeQty = changeQty;
+  window.rmItem = rmItem;
+  window.addFromModal = addFromModal;
+  window.closeModal = closeModal;
+  window.openConfirmOrder = openConfirmOrder;
+  window.closeConfirmOrder = closeConfirmOrder;
+  window.toggleConfirmBtn = toggleConfirmBtn;
+  window.sendOrderToTG = sendOrderToTG;
+  window.applyPromo = applyPromo;
+  window.removePromo = removePromo;
+  window.confirmOrder = confirmOrder;
+  window.cancelOrder = cancelOrder;
+  window.shareReferral = shareReferral;
+  window.updateStockFromInput = updateStockFromInput;
+  window.onCashInput = onCashInput;
+
+  load();
+  renderProducts();
+  updateCount();
+  updateCartUI();
+  initSupabase(async () => {
+    await loadStock();
+    await initUserAndReferral();
+
+    if (supabase && user.id){
+      try {
+        const { data: o } = await supabase.from('orders')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'confirmed')
+          .order('created_at', { ascending: false });
+        if (o) {
+          orders = o.map(x => ({
+            id: x.order_id, date: x.created_at, items: x.items,
+            total: Number(x.total), discount: Number(x.discount), status: x.status
+          }));
+          save();
+          updateCount();
+          updateCartUI();
+        }
+      } catch(e){ console.warn('[orders sync]', e); }
+    }
+
+    renderProducts();
+  });
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeAll(); closeModal(); } });
+  console.log('%c🎨 Trahan Zizhka v25','font-size:16px;font-weight:bold;color:#c6ff2e');
+})();
+</script>
+</body>
+</html>
