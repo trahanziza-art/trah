@@ -20,6 +20,7 @@ window.addEventListener('error', function(e){
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;overflow-x:hidden}
 body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;overflow-x:hidden;max-width:100vw;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+body.lock{overflow:hidden}
 h1,h2,h3,.logo,.price,.stat-val,.row.final b,.order-total,.cart-item-title{font-family:Unbounded,sans-serif}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent}
@@ -284,7 +285,13 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
   .product .desc{font-size:9px;padding:2px 6px}
   .product .flavors-info{display:none}
   .flavors-list{grid-template-columns:1fr}
+
+  /* Bottom sheet для карточки товара на мобилке */
+  #flavorModal{align-items:flex-end;padding:0}
+  #flavorModal .modal-card{border-radius:20px 20px 0 0;max-height:88dvh;max-width:100%}
+  #flavorModal.open .modal-card{animation:tzSheetUp .25s ease-out}
 }
+@keyframes tzSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -506,7 +513,7 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     {id:50,name:"🔧 Испаритель на Aegis 50-58 ват (Aegis B0)",price:13,cat:"consumables",brand:"geekvape",flavors:[],desc:"50-58 ват, 5 шт"},
     {id:605,name:"🔧 Сменный картридж Aegis H45 (с испарителем)",price:20,cat:"consumables",brand:"geekvape",isNew:true,flavors:[],desc:"Оригинал, с испарителем"},
     {id:98,name:"🔧 Испаритель на Pasito 50-65 ват (Pasito/Knight)",price:12,cat:"consumables",brand:"smoant",flavors:[],desc:"50-65 ват"},
-    {id:98,name:"🔧 Испаритель на Pasito 70-90 ват (Pasito/Knight)",price:12,cat:"consumables",brand:"smoant",flavors:[],desc:"70-90 ват"},
+    {id:99,name:"🔧 Испаритель на Pasito 70-90 ват (Pasito/Knight)",price:12,cat:"consumables",brand:"smoant",flavors:[],desc:"70-90 ват"},
     {id:121,name:"🔧 Испаритель Voopoo V.THRU 0.4 Ом",price:13,cat:"consumables",brand:"voopoo",flavors:[],desc:"0.4 Ом"},
     {id:51,name:"🔧 Никобустер Salt (+20мг на 30 мл)",price:3,cat:"consumables",brand:"jord",flavors:[],desc:"Для миксовки"}
   ];
@@ -525,6 +532,14 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     if (m10 === 1 && m100 !== 11) return one;
     if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
     return many;
+  }
+
+  // ---- Скролл-лок фона при открытых модалках/шторках ----
+  function lockScroll(){ document.body.classList.add('lock'); }
+  function unlockScroll(){
+    if (!document.querySelector('.modal.open, .drawer.open')) {
+      document.body.classList.remove('lock');
+    }
   }
 
   const tg = window.Telegram?.WebApp;
@@ -785,9 +800,10 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     updateCartUI(); 
     $('cartDrawer')?.classList.add('open'); 
     $('overlay')?.classList.add('open'); 
+    lockScroll();
   }
-  function openProfile(){ if (!isTG) return showToast('Открой через Telegram', true); closeAll(); renderProfile(); $('profileDrawer')?.classList.add('open'); $('overlay')?.classList.add('open'); }
-  function openPromos(){ closeAll(); renderPromos(); $('promosDrawer')?.classList.add('open'); $('overlay')?.classList.add('open'); }
+  function openProfile(){ if (!isTG) return showToast('Открой через Telegram', true); closeAll(); renderProfile(); $('profileDrawer')?.classList.add('open'); $('overlay')?.classList.add('open'); lockScroll(); }
+  function openPromos(){ closeAll(); renderPromos(); $('promosDrawer')?.classList.add('open'); $('overlay')?.classList.add('open'); lockScroll(); }
   function openAdmin(){ 
     closeAll(); 
     adminTab = 'orders';
@@ -795,6 +811,7 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     renderAdmin(); 
     $('adminDrawer')?.classList.add('open'); 
     $('overlay')?.classList.add('open'); 
+    lockScroll();
   }
   function switchAdminTab(tab){
     adminTab = tab;
@@ -802,7 +819,11 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     if (tab === 'orders') renderAdmin();
     else renderStock();
   }
-  function closeAll(){ ['cartDrawer','profileDrawer','promosDrawer','adminDrawer'].forEach(id => $(id)?.classList.remove('open')); $('overlay')?.classList.remove('open'); }
+  function closeAll(){ 
+    ['cartDrawer','profileDrawer','promosDrawer','adminDrawer'].forEach(id => $(id)?.classList.remove('open')); 
+    $('overlay')?.classList.remove('open'); 
+    unlockScroll();
+  }
 
   function hasLoyaltyNow(){
     return (orders.length % 10) === 9;
@@ -1260,50 +1281,84 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     save(); updateCount(); updateCartUI(); haptic();
   }
 
+  // ---- Открытие карточки товара (модалка/bottom-sheet) ----
+  function openProductModal(p){
+    if (!p) return;
+    haptic();
+    const totalStock = getProductTotalStock(p);
+    if (totalStock === 0) { showToast('Нет в наличии', true); return; }
+
+    const isAdminUser = ADMIN_IDS.includes(user.id);
+    const imgHtml = `<div class="modal-img"><img src="images/product${p.id}.jpg" alt="${p.name}" onerror="this.style.display='none'"><div class="ph" style="position:absolute;inset:0;display:grid;place-items:center;font-size:52px;opacity:.3">${CAT_EMOJI[p.cat]}</div></div>`;
+    const descHtml = p.desc ? `<p style="color:var(--mut);font-size:12px;margin-top:6px;margin-bottom:10px">${p.desc}</p>` : '';
+
+    modalPid = p.id;
+
+    if (!p.flavors || p.flavors.length === 0){
+      modalFlavor = '';
+      $('modalCard').innerHTML = `
+        ${imgHtml}
+        <div class="modal-body">
+          <h3>${p.name}</h3>
+          ${descHtml}
+        </div>
+        <div class="modal-foot">
+          <div class="price">${p.price}<small>BYN</small></div>
+          <button class="btn" onclick="addFromModal()">В корзину</button>
+        </div>`;
+    } else {
+      modalFlavor = p.flavors.length === 1 ? p.flavors[0] : null;
+      const needChoose = p.flavors.length > 1;
+      const firstStock = p.flavors.length === 1 ? getStock(p.id, p.flavors[0]) : null;
+      const firstOut = firstStock === 0;
+      const btnDisabled = needChoose || firstOut;
+
+      $('modalCard').innerHTML = `
+        ${imgHtml}
+        <div class="modal-body">
+          <h3>${p.name}</h3>
+          ${descHtml}
+          <div class="mflavors-label">${needChoose ? 'Выбери вкус' : 'Вкус'}</div>
+          <div class="flavors-list" id="flavorsList">
+            ${p.flavors.map((f,i) => {
+              const stock = getStock(p.id, f);
+              const out = stock === 0;
+              const sel = (!needChoose || (i===0 && p.flavors.length===1)) && !out;
+              const stockLabel = isAdminUser && stock !== null ? `<span class="fl-stock ${out?'out':''}">${out?'нет':stock+' шт'}</span>` : '';
+              return `<button class="flavor-chip${sel?' sel':''}${out?' out':''}" data-flavor="${f}" ${out?'disabled':''}>${f} ${stockLabel}</button>`;
+            }).join('')}
+          </div>
+        </div>
+        <div class="modal-foot">
+          <div class="price">${p.price}<small>BYN</small></div>
+          <button class="btn" id="modalAddBtn" onclick="addFromModal()" ${btnDisabled ? 'disabled' : ''}>В корзину</button>
+        </div>`;
+
+      $('flavorsList').onclick = ev => {
+        const chip = ev.target.closest('.flavor-chip'); 
+        if (!chip || chip.disabled) return;
+        $('flavorsList').querySelectorAll('.flavor-chip').forEach(c => c.classList.remove('sel'));
+        chip.classList.add('sel');
+        modalFlavor = chip.dataset.flavor;
+        const btn = $('modalAddBtn');
+        if (btn) btn.disabled = false;
+      };
+    }
+
+    $('flavorModal').classList.add('open');
+    lockScroll();
+  }
+  window.openProductModal = openProductModal;
+
+  // ---- Клик по каталогу: + быстрый, карточка → модалка ----
   $('products')?.addEventListener('click', e => {
     const addBtn = e.target.closest('[data-add]');
     if (addBtn) {
       e.stopPropagation();
-      const p = getP(addBtn.dataset.add); if (!p) return;
+      const p = getP(addBtn.dataset.add);
+      if (!p) return;
       if (p.flavors?.length > 0) {
-        modalPid = p.id;
-        modalFlavor = p.flavors.length === 1 ? p.flavors[0] : null;
-        const needChoose = p.flavors.length > 1;
-        const firstStock = p.flavors.length === 1 ? getStock(p.id, p.flavors[0]) : null;
-        const firstOut = firstStock === 0;
-        const btnDisabled = needChoose || firstOut;
-        const isAdminUser = ADMIN_IDS.includes(user.id);
-        
-        $('modalCard').innerHTML = `
-          <div class="modal-img"><img src="images/product${p.id}.jpg"></div>
-          <div class="modal-body">
-            <h3>${p.name}</h3>
-            <div class="mflavors-label">${needChoose ? 'Выбери вкус' : 'Вкус'}</div>
-            <div class="flavors-list" id="flavorsList">
-              ${p.flavors.map((f,i) => {
-                const stock = getStock(p.id, f);
-                const out = stock === 0;
-                const sel = (!needChoose || (i===0 && p.flavors.length===1)) && !out;
-                const stockLabel = isAdminUser && stock !== null ? `<span class="fl-stock ${out?'out':''}">${out?'нет':stock+' шт'}</span>` : '';
-                return `<button class="flavor-chip${sel?' sel':''}${out?' out':''}" data-flavor="${f}" ${out?'disabled':''}>${f} ${stockLabel}</button>`;
-              }).join('')}
-            </div>
-          </div>
-          <div class="modal-foot">
-            <div class="price">${p.price}<small>BYN</small></div>
-            <button class="btn" id="modalAddBtn" onclick="addFromModal()" ${btnDisabled ? 'disabled' : ''}>В корзину</button>
-          </div>`;
-        $('flavorModal').classList.add('open');
-        
-        $('flavorsList').onclick = ev => {
-          const chip = ev.target.closest('.flavor-chip'); 
-          if (!chip || chip.disabled) return;
-          $('flavorsList').querySelectorAll('.flavor-chip').forEach(c => c.classList.remove('sel'));
-          chip.classList.add('sel');
-          modalFlavor = chip.dataset.flavor;
-          const btn = $('modalAddBtn');
-          if (btn) btn.disabled = false;
-        };
+        openProductModal(p);
       } else {
         const s = getStock(p.id, '');
         if (s === 0) { showToast('Нет в наличии', true); return; }
@@ -1311,18 +1366,26 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
       }
       return;
     }
+    const card = e.target.closest('.product');
+    if (card) {
+      const p = getP(parseInt(card.dataset.pid));
+      if (p) openProductModal(p);
+    }
   });
 
   function addFromModal(){
     if (!modalPid) return;
-    if (!modalFlavor) { showToast('Выбери вкус', true); return; }
-    addToCart(modalPid, modalFlavor);
+    const p = getP(modalPid);
+    if (!p) { closeModal(); return; }
+    if (p.flavors?.length > 0 && !modalFlavor) { showToast('Выбери вкус', true); return; }
+    addToCart(modalPid, modalFlavor || '');
     closeModal();
   }
   function closeModal(){ 
     $('flavorModal')?.classList.remove('open'); 
     modalPid = null;
     modalFlavor = null;
+    unlockScroll();
   }
 
   function openConfirmOrder(){
@@ -1346,8 +1409,12 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     $('confirmCheckbox').checked = false;
     $('confirmSendBtn').classList.remove('active');
     $('confirmOrderModal').classList.add('open');
+    lockScroll();
   }
-  function closeConfirmOrder(){ $('confirmOrderModal')?.classList.remove('open'); }
+  function closeConfirmOrder(){ 
+    $('confirmOrderModal')?.classList.remove('open'); 
+    unlockScroll();
+  }
   function toggleConfirmBtn(){ $('confirmSendBtn').classList.toggle('active', $('confirmCheckbox').checked); }
 
   async function sendOrderToTG(){
@@ -1485,8 +1552,8 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     renderProducts();
   });
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeAll(); closeModal(); } });
-  console.log('%c🎨 Trahan Zizhka v25','font-size:16px;font-weight:bold;color:#c6ff2e');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeAll(); closeModal(); closeConfirmOrder(); } });
+  console.log('%c🎨 Trahan Zizhka v25.1','font-size:16px;font-weight:bold;color:#c6ff2e');
 })();
 </script>
 </body>
