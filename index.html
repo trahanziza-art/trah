@@ -273,6 +273,31 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
 .toast.show{transform:translate(-50%,0)}
 .toast.error{background:var(--err)}
 
+/* ===== Search / Sort ===== */
+.search-bar{display:flex;gap:8px;margin-bottom:14px}
+.search-input{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--bd);border-radius:12px;color:var(--txt);font-family:inherit;font-size:15px;outline:none;transition:border-color .2s;min-width:0;-webkit-appearance:none;appearance:none}
+.search-input:focus{border-color:var(--acc)}
+.search-input::placeholder{color:var(--mut)}
+.search-input::-webkit-search-cancel-button{filter:invert(1);opacity:.5;cursor:pointer}
+.sort-select{padding:12px 32px 12px 14px;background:var(--card);border:1px solid var(--bd);border-radius:12px;color:var(--txt);font-family:inherit;font-size:13px;font-weight:600;outline:none;cursor:pointer;flex-shrink:0;max-width:150px;-webkit-appearance:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 16px) 52%,calc(100% - 11px) 52%;background-size:5px 5px;background-repeat:no-repeat}
+.sort-select:focus{border-color:var(--acc)}
+.products-info{font-size:12px;color:var(--mut);margin-bottom:12px;text-align:center;min-height:18px}
+
+/* ===== Favorite ===== */
+.fav-btn{position:absolute;top:8px;right:8px;z-index:3;width:34px;height:34px;border-radius:50%;background:rgba(13,5,24,.78);backdrop-filter:blur(4px);color:var(--mut);font-size:15px;display:grid;place-items:center;transition:.2s;border:1px solid var(--bd);line-height:1;padding:0}
+.fav-btn.active{color:var(--acc);background:rgba(255,77,210,.18);border-color:var(--acc)}
+.product.featured .fav-btn{top:38px}
+
+/* ===== Back to top ===== */
+.back-to-top{position:fixed;bottom:calc(24px + var(--sb));right:24px;width:48px;height:48px;border-radius:50%;background:var(--grad);color:#fff;font-size:22px;font-weight:800;box-shadow:0 10px 30px -8px rgba(255,77,210,.6);z-index:90;opacity:0;pointer-events:none;transform:translateY(20px);transition:opacity .25s,transform .25s;display:grid;place-items:center;line-height:1;padding:0}
+.back-to-top.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.back-to-top:active{transform:scale(.92)}
+
+/* ===== Touch / perf / a11y ===== */
+button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipulation}
+@media(hover:none){.product:hover{transform:none;border-color:var(--bd)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
 @media(max-width:900px){
   .hero{grid-template-columns:1fr;padding-top:28px;gap:22px}
   .hero-visual{height:280px}
@@ -286,7 +311,6 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
   .product .flavors-info{display:none}
   .flavors-list{grid-template-columns:1fr}
 
-  /* Bottom sheet для карточки товара на мобилке */
   #flavorModal{align-items:flex-end;padding:0}
   #flavorModal .modal-card{border-radius:20px 20px 0 0;max-height:88dvh;max-width:100%}
   #flavorModal.open .modal-card{animation:tzSheetUp .25s ease-out}
@@ -335,6 +359,16 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
 
 <section class="section" id="catalog">
   <div class="section-head"><div><h2>Каталог</h2><p>Цены в BYN</p></div></div>
+  <div class="search-bar">
+    <input type="search" id="searchInput" class="search-input" placeholder="🔍 Найти товар, вкус, бренд..." autocomplete="off" enterkeyhint="search">
+    <select id="sortSelect" class="sort-select" aria-label="Сортировка">
+      <option value="default">По умолчанию</option>
+      <option value="new">Новинки</option>
+      <option value="featured">Хиты</option>
+      <option value="price-asc">Цена ↑</option>
+      <option value="price-desc">Цена ↓</option>
+    </select>
+  </div>
   <div class="filters-bar">
     <div class="filters-group" id="catFilters">
       <span class="filters-label">Категории:</span>
@@ -345,9 +379,11 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
       <button class="filter" data-cat="snus">Снюс</button>
       <button class="filter" data-cat="kofein">Кофеин</button>
       <button class="filter" data-cat="consumables">Расходники</button>
+      <button class="filter" data-cat="favorites">❤️ Избранное</button>
     </div>
     <div class="filters-group" id="brandFilters"><span class="filters-label">Бренды:</span></div>
   </div>
+  <div class="products-info" id="productsInfo"></div>
   <div class="products" id="products"></div>
 </section>
 
@@ -421,6 +457,7 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
   </div>
 </div>
 
+<button class="back-to-top" id="backToTop" aria-label="Наверх" title="Наверх">↑</button>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -534,7 +571,6 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     return many;
   }
 
-  // ---- Скролл-лок фона при открытых модалках/шторках ----
   function lockScroll(){ document.body.classList.add('lock'); }
   function unlockScroll(){
     if (!document.querySelector('.modal.open, .drawer.open')) {
@@ -588,6 +624,9 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
   let promoLoading = false;
   let payMethod = 'card';
   let cashAmount = 0;
+  let searchQuery = '';
+  let currentSort = 'default';
+  let favorites = new Set();
 
   const SK = 'tz_v25';
   function save(){ safeSet(SK, JSON.stringify({cart,orders,activePromo})); }
@@ -732,12 +771,46 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     try {
       const wrap = $('products'); if (!wrap) return;
       const isAdminUser = ADMIN_IDS.includes(user.id);
-      const list = P.filter(p => {
-        const catOK = curCat === 'all' || p.cat === curCat;
+      const isFavFilter = curCat === 'favorites';
+      const q = searchQuery.trim().toLowerCase();
+
+      let list = P.filter(p => {
+        if (isFavFilter && !favorites.has(p.id)) return false;
+        const catOK = isFavFilter || curCat === 'all' || p.cat === curCat;
         const brandOK = curBrand === 'all' || String(p.brand||'').toLowerCase() === curBrand.toLowerCase();
-        return catOK && brandOK;
+        if (!catOK || !brandOK) return false;
+        if (q){
+          const hay = (p.name + ' ' + (p.brand||'') + ' ' + (p.desc||'') + ' ' + ((p.flavors||[]).join(' '))).toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
       });
-      if (!list.length) { wrap.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mut)">Нет товаров</div>`; return; }
+
+      const withMeta = list.map(p => ({ p, out: getProductTotalStock(p) === 0 ? 1 : 0 }));
+      const cmp = {
+        'default': () => 0,
+        'new': (a, b) => (b.p.isNew?1:0) - (a.p.isNew?1:0),
+        'featured': (a, b) => (b.p.isFeatured?1:0) - (a.p.isFeatured?1:0),
+        'price-asc': (a, b) => a.p.price - b.p.price,
+        'price-desc': (a, b) => b.p.price - a.p.price
+      }[currentSort] || (() => 0);
+      withMeta.sort((a, b) => a.out - b.out || cmp(a, b));
+      list = withMeta.map(x => x.p);
+
+      const info = $('productsInfo');
+      if (info){
+        const cnt = `${list.length} ${plural(list.length,'товар','товара','товаров')}`;
+        info.textContent = (q || isFavFilter || curCat !== 'all' || curBrand !== 'all') ? `Найдено: ${cnt}` : cnt;
+      }
+
+      if (!list.length){
+        let emptyMsg = 'Нет товаров';
+        if (q) emptyMsg = `По запросу «${searchQuery.trim()}» ничего не найдено`;
+        else if (isFavFilter) emptyMsg = 'В избранном пока пусто — тапни ❤️ на любой карточке';
+        wrap.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--mut);line-height:1.5">${emptyMsg}</div>`;
+        return;
+      }
+
       let html = '';
       for (const p of list){
         const hasFl = p.flavors?.length > 0;
@@ -746,7 +819,9 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
         const stockInfo = (isAdminUser && totalStock !== null && totalStock > 0) ? `<div class="stock-info">📦 ${totalStock} шт</div>` : '';
         const outBadge = outOfStock ? `<span class="badge out">Нет в наличии</span>` : '';
         const featuredClass = p.isFeatured ? ' featured' : '';
+        const isFav = favorites.has(p.id);
         html += `<div class="product ${outOfStock ? 'out' : ''}${featuredClass}" data-pid="${p.id}">${outBadge}
+          <button class="fav-btn ${isFav?'active':''}" data-fav="${p.id}" aria-label="Избранное" title="${isFav?'Убрать из избранного':'В избранное'}">${isFav?'❤️':'🤍'}</button>
           <div class="product-img">
             <img src="images/product${p.id}.jpg" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
             <div class="ph">${CAT_EMOJI[p.cat]}</div>
@@ -763,7 +838,7 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
         </div>`;
       }
       wrap.innerHTML = html;
-    } catch(e){}
+    } catch(e){ console.warn('[render]', e); }
   }
 
   try {
@@ -784,6 +859,44 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     document.querySelectorAll('#brandFilters .filter').forEach(x => x.classList.remove('active'));
     if (was){ curBrand = 'all'; } else { b.classList.add('active'); curBrand = b.dataset.brand; }
     renderProducts();
+  });
+
+  function toggleFavorite(id){
+    if (favorites.has(id)) favorites.delete(id);
+    else favorites.add(id);
+    try { safeSet('tz_favorites', JSON.stringify([...favorites])); } catch(e){}
+    haptic();
+    renderProducts();
+  }
+  window.toggleFavorite = toggleFavorite;
+
+  let searchTimer = null;
+  $('searchInput')?.addEventListener('input', e => {
+    const val = e.target.value;
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { searchQuery = val; renderProducts(); }, 220);
+  });
+  $('searchInput')?.addEventListener('search', e => { searchQuery = e.target.value; renderProducts(); });
+
+  $('sortSelect')?.addEventListener('change', e => { currentSort = e.target.value; renderProducts(); });
+
+  const backToTopEl = $('backToTop');
+  let backToTopVisible = false;
+  let scrollRaf = null;
+  function updateBackToTop(){
+    const show = window.scrollY > 500;
+    if (show !== backToTopVisible){
+      backToTopVisible = show;
+      backToTopEl?.classList.toggle('show', show);
+    }
+  }
+  window.addEventListener('scroll', () => {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => { scrollRaf = null; updateBackToTop(); });
+  }, { passive: true });
+  backToTopEl?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    haptic();
   });
 
   function updateCount(){ const el = $('cartCount'); if (el) el.textContent = Object.values(cart).reduce((s,i)=>s+i.qty, 0); }
@@ -1281,7 +1394,6 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
     save(); updateCount(); updateCartUI(); haptic();
   }
 
-  // ---- Открытие карточки товара (модалка/bottom-sheet) ----
   function openProductModal(p){
     if (!p) return;
     haptic();
@@ -1350,8 +1462,13 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
   }
   window.openProductModal = openProductModal;
 
-  // ---- Клик по каталогу: + быстрый, карточка → модалка ----
   $('products')?.addEventListener('click', e => {
+    const favBtn = e.target.closest('[data-fav]');
+    if (favBtn) {
+      e.stopPropagation();
+      toggleFavorite(parseInt(favBtn.dataset.fav));
+      return;
+    }
     const addBtn = e.target.closest('[data-add]');
     if (addBtn) {
       e.stopPropagation();
@@ -1523,6 +1640,10 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
   window.onCashInput = onCashInput;
 
   load();
+  try {
+    const favRaw = safeGet('tz_favorites');
+    if (favRaw) favorites = new Set(JSON.parse(favRaw));
+  } catch(e){}
   renderProducts();
   updateCount();
   updateCartUI();
@@ -1553,7 +1674,7 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
   });
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeAll(); closeModal(); closeConfirmOrder(); } });
-  console.log('%c🎨 Trahan Zizhka v25.1','font-size:16px;font-weight:bold;color:#c6ff2e');
+  console.log('%c🎨 Trahan Zizhka v26','font-size:16px;font-weight:bold;color:#c6ff2e');
 })();
 </script>
 </body>
