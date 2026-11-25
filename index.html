@@ -51,11 +51,49 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
 .btn{padding:14px 22px;border-radius:14px;font-weight:600;font-size:14px;transition:.25s;display:inline-flex;align-items:center;gap:8px;justify-content:center;min-height:46px}
 .btn-primary{background:var(--grad);color:#fff;box-shadow:0 10px 40px -10px rgba(255,77,210,.5)}
 
-.hero-visual{position:relative;height:340px;display:flex;align-items:center;justify-content:center;overflow:visible}
-.map-card{position:relative;width:100%;max-width:340px;height:280px;border-radius:20px;background:var(--card);border:1px solid var(--bd);box-shadow:0 30px 80px -20px rgba(168,85,247,.4);overflow:hidden;cursor:pointer;transition:transform 0.3s}
+.hero-visual{position:relative;height:340px;display:flex;flex-direction:column;gap:16px;overflow:visible}
+.map-card{position:relative;width:100%;flex:1;border-radius:20px;background:var(--card);border:1px solid var(--bd);box-shadow:0 30px 80px -20px rgba(168,85,247,.4);overflow:hidden;cursor:pointer;transition:transform 0.3s}
 .map-card:hover{transform:translateY(-4px);border-color:rgba(255,77,210,.4)}
 .map-badge{position:absolute;top:12px;left:12px;background:var(--grad);color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;z-index:2;box-shadow:0 4px 10px rgba(0,0,0,0.3)}
 .map-hint{position:absolute;bottom:0;left:0;right:0;background:rgba(13,5,24,0.85);backdrop-filter:blur(4px);color:#fff;text-align:center;padding:10px;font-size:12px;font-weight:600;z-index:2}
+
+/* Новый баннер скидок */
+.sale-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff4d6d, #ff8c00);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(255, 77, 109, 0.6);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.sale-banner:hover {
+  transform: scale(1.02);
+  box-shadow: 0 15px 40px -10px rgba(255, 77, 109, 0.8);
+}
+.sale-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shine 3s infinite;
+}
+@keyframes shine {
+  0% { left: -100%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
+}
+.sale-banner span { position: relative; z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
 .section{max-width:1280px;margin:0 auto;padding:50px 16px;overflow-x:hidden}
 .section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:26px;flex-wrap:wrap;gap:12px}
@@ -338,7 +376,7 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
 
 @media(max-width:900px){
   .hero{grid-template-columns:1fr;padding-top:28px;gap:22px}
-  .hero-visual{height:280px}
+  .hero-visual{height:380px}
 }
 @media(max-width:520px){
   .drawer{width:100%}
@@ -392,6 +430,11 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
       </iframe>
       <div class="map-hint">Нажми, чтобы открыть в Яндекс Картах</div>
     </div>
+    
+    <!-- Баннер скидок -->
+    <div class="sale-banner" onclick="goToSales()">
+      <span>🔥 ГОРЯЧИЕ СКИДКИ 🔥</span>
+    </div>
   </div>
 </section>
 
@@ -417,6 +460,7 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
       <button class="filter" data-cat="snus">Снюс</button>
       <button class="filter" data-cat="kofein">Кофеин</button>
       <button class="filter" data-cat="consumables">Расходники</button>
+      <button class="filter" data-cat="sale">🔥 Скидки</button>
       <button class="filter" data-cat="favorites">❤️ Избранное</button>
     </div>
     <div class="filters-group" id="brandFilters"><span class="filters-label">Бренды:</span></div>
@@ -640,6 +684,16 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
   }
   window.openYandexMaps = openYandexMaps;
 
+  function goToSales() {
+    curCat = 'sale';
+    document.querySelectorAll('#catFilters .filter').forEach(x => x.classList.remove('active'));
+    const saleBtn = document.querySelector('#catFilters [data-cat="sale"]');
+    if (saleBtn) saleBtn.classList.add('active');
+    renderProducts();
+    $('catalog')?.scrollIntoView({ behavior: 'smooth' });
+  }
+  window.goToSales = goToSales;
+
   let supabase = null;
   let currentUserData = null;
   let stockCache = {};
@@ -810,11 +864,14 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
       const wrap = $('products'); if (!wrap) return;
       const isAdminUser = ADMIN_IDS.includes(user.id);
       const isFavFilter = curCat === 'favorites';
+      const isSaleFilter = curCat === 'sale';
       const q = searchQuery.trim().toLowerCase();
 
       let list = P.filter(p => {
         if (isFavFilter && !favorites.has(p.id)) return false;
-        const catOK = isFavFilter || curCat === 'all' || p.cat === curCat;
+        if (isSaleFilter && !p.isSale) return false;
+        
+        const catOK = isFavFilter || isSaleFilter || curCat === 'all' || p.cat === curCat;
         const brandOK = curBrand === 'all' || String(p.brand||'').toLowerCase() === curBrand.toLowerCase();
         if (!catOK || !brandOK) return false;
         if (q){
@@ -853,13 +910,14 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
       const info = $('productsInfo');
       if (info){
         const cnt = `${list.length} ${plural(list.length,'товар','товара','товаров')}`;
-        info.textContent = (q || isFavFilter || curCat !== 'all' || curBrand !== 'all') ? `Найдено: ${cnt}` : cnt;
+        info.textContent = (q || isFavFilter || isSaleFilter || curCat !== 'all' || curBrand !== 'all') ? `Найдено: ${cnt}` : cnt;
       }
 
       if (!list.length){
         let emptyMsg = 'Нет товаров';
         if (q) emptyMsg = `По запросу «${searchQuery.trim()}» ничего не найдено`;
         else if (isFavFilter) emptyMsg = 'В избранном пока пусто — тапни ❤️ на любой карточке';
+        else if (isSaleFilter) emptyMsg = 'Сейчас нет активных скидок';
         wrap.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--mut);line-height:1.5">${emptyMsg}</div>`;
         return;
       }
@@ -1493,14 +1551,12 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
           <button class="btn" onclick="addFromModal()">В корзину</button>
         </div>`;
     } else {
-      // СКРЫВАЕМ ВКУСЫ С НУЛЕВЫМ ОСТАТКОМ (если у них есть запись в базе stockCache)
       const availableFlavors = p.flavors.filter(f => {
         const s = getStock(p.id, f);
-        return s === null || s > 0; // Оставляем, если нет инфы о складе (безлимит) или остаток > 0
+        return s === null || s > 0;
       });
 
       if (availableFlavors.length === 0) {
-        // Если вдруг все вкусы скрылись (такое может быть, если их только что раскупили), не даём открыть
         showToast('Все вкусы раскуплены', true);
         return;
       }
@@ -1761,7 +1817,7 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
   });
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeAll(); closeModal(); closeConfirmOrder(); } });
-  console.log('%c🎨 Trahan Zizhka v29','font-size:16px;font-weight:bold;color:#c6ff2e');
+  console.log('%c🎨 Trahan Zizhka v30','font-size:16px;font-weight:bold;color:#c6ff2e');
 })();
 </script>
 </body>
