@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -293,6 +294,38 @@ header{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:r
 .back-to-top.show{opacity:1;pointer-events:auto;transform:translateY(0)}
 .back-to-top:active{transform:scale(.92)}
 
+/* ===== Скидки и акции ===== */
+.product.sale {
+  border-color: var(--err);
+  box-shadow: 0 0 15px rgba(255, 77, 109, 0.2);
+}
+.badge.sale {
+  background: linear-gradient(135deg, #ff4d6d, #ff8c00);
+  top: 8px;
+  left: 8px;
+}
+.product.sale .fav-btn {
+  top: 38px;
+}
+.product.featured.sale::before {
+  content: '🔥 ХИТ • СКИДКА';
+  background: linear-gradient(135deg, #ff4dd2, #ff8c00);
+}
+.old-price {
+  font-size: 13px;
+  color: var(--mut);
+  text-decoration: line-through;
+  font-weight: 400;
+  margin-right: 6px;
+}
+.price-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
 /* ===== Touch / perf / a11y ===== */
 button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipulation}
 @media(hover:none){.product:hover{transform:none;border-color:var(--bd)}}
@@ -501,15 +534,15 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
   const P = [
     {id:607,name:"📱 VAPORESSO XROS 6 MINI",price:60,cat:"pod",brand:"vaporesso",isNew:true,isFeatured:true,flavors:["Plume pink","Plume white","Plume blue","Jelly orange","Jelly blue","Jelly green"],desc:"Под-система"},
     {id:612,name:"📱 VAPORESSO XROS 6",price:80,cat:"pod",brand:"vaporesso",isNew:true,flavors:["Dreamy pink","Silk green","Slate black"],desc:"Под-система"},
-    {id:1,name:"💀 D.L.T.A ☠️",price:16,cat:"snus",brand:"D.L.T.A",flavors:["Adrenaline RUSH PEPSI 💙⚡","Adrenaline RUSH LIMITED EDITION ICE EFFECT 🔳🧊","Adrenaline RUSH 🤩⚡","Adrenaline VITAMIN POWER 🙃💪"],desc:"Снюс, крепкий"},
-    {id:2,name:"💀 D.L.T.A XS ☠️",price:16,cat:"snus",brand:"D.L.T.A",flavors:["Микс ягод 🫐🍓","Зеленый виноград мята 🍇🌿"],desc:"Снюс, крепкий"},
+    {id:1,name:"💀 D.L.T.A ☠️",price:13,oldPrice:16,isSale:true,cat:"snus",brand:"D.L.T.A",flavors:["Adrenaline RUSH PEPSI 💙⚡","Adrenaline RUSH LIMITED EDITION ICE EFFECT 🔳🧊","Adrenaline RUSH 🤩⚡","Adrenaline VITAMIN POWER 🙃💪"],desc:"Снюс, 150 мг"},
+    {id:2,name:"💀 D.L.T.A XS ☠️",price:13,oldPrice:16,isSale:true,cat:"snus",brand:"D.L.T.A",flavors:["Микс ягод 🫐🍓","Зеленый виноград мята 🍇🌿"],desc:"Снюс, 150 мг"},
     {id:129,name:"💀 Iceberg Strong",price:16,cat:"snus",brand:"iceberg",flavors:["Черная смородина 🫐","Виноград 🍇","Арбуз лайм 🍉🍋"],desc:"75 мг"},
     {id:130,name:"💀 Iceberg Overkill",price:16,cat:"snus",brand:"iceberg",flavors:["Cherry riot 🍒💥","Citrus blast 🍋💥","Green rampage 🍏💥","Lime strike ⚡💥","Night crush 🖤💥","Polar fury 🧊💥"],desc:"200 мг"},
     {id:131,name:"💀 Iceberg Ultra",price:16,cat:"snus",brand:"iceberg",flavors:["Жвачка тутти-фрутти 🍬🫧","Мультифрукт цитрус 🍊🍋","Аромат цветов 🌸","Мандарин 🍊"],desc:"150 мг"},
     {id:303,name:"🔥 Iceberg Hardcore",price:16,cat:"snus",brand:"iceberg",flavors:["Ice shock 🧊💥","Dark bubble","Frozen pulse 🧊💥","Dark matter","Black fury"],desc:"150мг"},
     {id:400,name:"⚡ Glitch pouches",price:16,cat:"snus",brand:"Glitch",flavors:["Аромат жвачки с мятой","Аромат мяты","Аромат морозной вишни"],desc:"150 мг"},
     {id:610,name:"💀 Kasta COVID",price:17,cat:"snus",brand:"kasta",isNew:true,flavors:["Ванильный диагноз с колой","Вирус мохито","Озноб-виноградный лимонад","ПЦР с малиновым пончиком","Штамм бабл гама и манго"],desc:"Снюс, 120 мг"},
-    {id:500,name:"⚡ Кофеиновые паучи Iceberg",price:13,cat:"kofein",brand:"iceberg",flavors:["Сладкая мята 🌿🍬","Энергетик ⚡","Мятный арбуз 🌿🍉","Зеленое яблоко 🍏"],desc:"Кофеиновые паучи"},
+    {id:500,name:"⚡ Кофеиновые паучи Iceberg",price:13,cat:"kofein",brand:"ICBERG",flavors:["Сладкая мята 🌿🍬","Энергетик ⚡","Мятный арбуз 🌿🍉","Зеленое яблоко 🍏"],desc:"Кофеиновые паучи"},
     {id:8,name:"🧪 Bjorn Long 80mg 🧛",price:20,cat:"liquid",brand:"bjorn",flavors:["Мята спрайт 🌿🧊","Фруктовый мармелад 🍬🍊"],desc:"80mg, 30мл"},
     {id:101,name:"🧪 Bjorn Тёмный Хор",price:20,cat:"liquid",brand:"bjorn",flavors:["Кислое зеленое яблоко 🍏🍋","Кислый ягодный микс 🫐🍓🍋","Арбузный лед 🍉🧊","Арбуз мята 🍉🌿","Мятная жвачка 🌿🫧"],desc:"80 мг, 30мл"},
     {id:102,name:"🧪 Bjorn Сон Призрака",price:20,cat:"liquid",brand:"bjorn",flavors:["Ледяная клубника личи 🍓🧊","Манго со льдом 🥭🧊","Ананас манго 🍍🥭","Кислое яблоко 🍏","Яблоко персик 🍎🍑"],desc:"30мл"},
@@ -786,7 +819,14 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
         return true;
       });
 
-      const withMeta = list.map(p => ({ p, out: getProductTotalStock(p) === 0 ? 1 : 0 }));
+      const withMeta = list.map(p => {
+        const isOut = getProductTotalStock(p) === 0 ? 1 : 0;
+        let priority = 2; 
+        if (p.isFeatured) priority = 0;
+        else if (p.isSale) priority = 1;
+        return { p, out: isOut, priority };
+      });
+
       const cmp = {
         'default': () => 0,
         'new': (a, b) => (b.p.isNew?1:0) - (a.p.isNew?1:0),
@@ -794,7 +834,13 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
         'price-asc': (a, b) => a.p.price - b.p.price,
         'price-desc': (a, b) => b.p.price - a.p.price
       }[currentSort] || (() => 0);
-      withMeta.sort((a, b) => a.out - b.out || cmp(a, b));
+
+      withMeta.sort((a, b) => {
+        if (a.out !== b.out) return a.out - b.out; 
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return cmp(a, b);
+      });
+
       list = withMeta.map(x => x.p);
 
       const info = $('productsInfo');
@@ -818,10 +864,29 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
         const outOfStock = totalStock === 0;
         const stockInfo = (isAdminUser && totalStock !== null && totalStock > 0) ? `<div class="stock-info">📦 ${totalStock} шт</div>` : '';
         const outBadge = outOfStock ? `<span class="badge out">Нет в наличии</span>` : '';
+        
         const featuredClass = p.isFeatured ? ' featured' : '';
+        const saleClass = p.isSale ? ' sale' : '';
+        
+        let saleBadge = '';
+        if (p.isSale && !outOfStock) {
+          let percent = 0;
+          if (p.oldPrice && p.oldPrice > p.price) {
+            percent = Math.round((1 - p.price / p.oldPrice) * 100);
+          }
+          saleBadge = `<span class="badge sale">${percent > 0 ? '-' + percent + '%' : 'АКЦИЯ'}</span>`;
+        }
+
         const isFav = favorites.has(p.id);
-        html += `<div class="product ${outOfStock ? 'out' : ''}${featuredClass}" data-pid="${p.id}">${outBadge}
-          <button class="fav-btn ${isFav?'active':''}" data-fav="${p.id}" aria-label="Избранное" title="${isFav?'Убрать из избранного':'В избранное'}">${isFav?'❤️':'🤍'}</button>
+        
+        const priceHtml = p.isSale && p.oldPrice 
+          ? `<div class="price-block"><span class="old-price">${p.oldPrice}</span><div class="price">${p.price}<small>BYN</small></div></div>`
+          : `<div class="price">${p.price}<small>BYN</small></div>`;
+
+        html += `<div class="product ${outOfStock ? 'out' : ''}${featuredClass}${saleClass}" data-pid="${p.id}">
+          ${outBadge}
+          ${saleBadge}
+          <button class="fav-btn ${isFav?'active':''}" data-fav="${p.id}" aria-label="Избранное">${isFav?'❤️':'🤍'}</button>
           <div class="product-img">
             <img src="images/product${p.id}.jpg" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
             <div class="ph">${CAT_EMOJI[p.cat]}</div>
@@ -832,7 +897,7 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
           ${hasFl ? `<div class="flavors-info">🍬 ${p.flavors.length} вкусов</div>` : ''}
           ${stockInfo}
           <div class="product-foot">
-            <div class="price">${p.price}<small>BYN</small></div>
+            ${priceHtml}
             <button class="add-btn" data-add="${p.id}" ${outOfStock ? 'disabled' : ''}>${outOfStock ? '✕' : '+'}</button>
           </div>
         </div>`;
@@ -1415,7 +1480,9 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
           ${descHtml}
         </div>
         <div class="modal-foot">
-          <div class="price">${p.price}<small>BYN</small></div>
+          ${p.isSale && p.oldPrice 
+            ? `<div class="price-block"><span class="old-price">${p.oldPrice}</span><div class="price">${p.price}<small>BYN</small></div></div>`
+            : `<div class="price">${p.price}<small>BYN</small></div>`}
           <button class="btn" onclick="addFromModal()">В корзину</button>
         </div>`;
     } else {
@@ -1442,7 +1509,9 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
           </div>
         </div>
         <div class="modal-foot">
-          <div class="price">${p.price}<small>BYN</small></div>
+          ${p.isSale && p.oldPrice 
+            ? `<div class="price-block"><span class="old-price">${p.oldPrice}</span><div class="price">${p.price}<small>BYN</small></div></div>`
+            : `<div class="price">${p.price}<small>BYN</small></div>`}
           <button class="btn" id="modalAddBtn" onclick="addFromModal()" ${btnDisabled ? 'disabled' : ''}>В корзину</button>
         </div>`;
 
@@ -1674,7 +1743,7 @@ button,.filter,.add-btn,.fav-btn,.search-input,.sort-select{touch-action:manipul
   });
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeAll(); closeModal(); closeConfirmOrder(); } });
-  console.log('%c🎨 Trahan Zizhka v26','font-size:16px;font-weight:bold;color:#c6ff2e');
+  console.log('%c🎨 Trahan Zizhka v27','font-size:16px;font-weight:bold;color:#c6ff2e');
 })();
 </script>
 </body>
